@@ -1,0 +1,108 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Colorization</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;900&display=swap">
+</head>
+
+<body>
+
+    <video id="myVideo" class="bg_video" src="../static/pexels_videos_1943483 (2160p).mp4" autoplay muted loop></video>
+
+    <div class="baaa">
+        <div class="super_container">
+            <form action="/" method="post" enctype="multipart/form-data" class="container">
+                <img src="../static/logo.jpg" alt="">
+                <div class="brand-title">Colorize</div>
+                <div class="inputs">
+                    <label for="image"></label>
+                    <input type="file" name="image" accept="image/*" required placeholder="Choose an image">
+                    <button type="submit">Colorize Image</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="result">
+            {% if original_base64 and colorized_base64 %}
+            <div>
+                <h2>Original Image</h2>
+                <img src="data:image/png;base64,{{ original_base64 }}" alt="Original Image">
+            </div>
+
+            <div class="colorized-image">
+                <h2>Colorized Image</h2>
+                <div class="image-wrapper">
+                    <img src="data:image/png;base64,{{ colorized_base64 }}" alt="Colorized Image">
+                    <div class="download_button">
+                        <a download href="data:image/png;base64,{{ colorized_base64 }}">Download</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="imgdiff">
+                <h2>Image Difference</h2>
+                <input type="range" min="0" max="1" step="0.01" value="0" id="alphaRange" oninput="updateBlend()">
+                <div id="imageDifference" class="image-wrapper"></div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get the video element
+        var video = document.getElementById("myVideo");
+
+        // Set an interval to increase playback rate every second
+        var speedInterval = setInterval(function () {
+            // Increase the playback rate by 0.25
+            video.playbackRate += .9;
+        }, 1000); // Adjust the interval (milliseconds) as needed
+
+        function updateBlend() {
+            var alpha = document.getElementById('alphaRange').value;
+            var originalImg = new Image();
+            originalImg.src = "data:image/png;base64,{{ original_base64 }}";
+            var colorizedImg = new Image();
+            colorizedImg.src = "data:image/png;base64,{{ colorized_base64 }}";
+
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            canvas.width = originalImg.width;
+            canvas.height = originalImg.height;
+
+            ctx.globalAlpha = alpha;
+            ctx.drawImage(originalImg, 0, 0);
+            ctx.globalAlpha = 1 - alpha;
+            ctx.drawImage(colorizedImg, 0, 0);
+
+            var imgDifference = document.getElementById('imageDifference');
+            imgDifference.innerHTML = '';
+            imgDifference.appendChild(canvas);
+        }
+
+        function getDifferenceImageData() {
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            var originalImg = new Image();
+            originalImg.src = "data:image/png;base64,{{ original_base64 }}";
+            var colorizedImg = new Image();
+            colorizedImg.src = "data:image/png;base64,{{ colorized_base64 }}";
+
+            canvas.width = originalImg.width;
+            canvas.height = originalImg.height;
+
+            ctx.globalAlpha = 0.5;
+            ctx.drawImage(originalImg, 0, 0);
+            ctx.globalAlpha = 0.5;
+            ctx.drawImage(colorizedImg, 0, 0);
+
+            return canvas.toDataURL('image/png');
+        }
+    </script>
+    {% endif %}
+</body>
+
+</html>
